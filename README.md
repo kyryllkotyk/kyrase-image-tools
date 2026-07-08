@@ -4,16 +4,14 @@ The project currently focuses on loading image data, applying basic image operat
 and benchmarking CPU performance. The long-term goal is to expand the toolkit to be performance-oriented and support single-threaded CPU, multithreaded CPU, and HIP/ROCm GPU options.
 
 ## Completed Roadmap Steps
-This will be updated dynamically as steps get completed
-
-## Roadmap
 1. **PPM to internal image representation**
   Convert PPM images into image information (format, width, height, channels, max color value, and color values)
      
 2. **Internal image representation to PPM**
   Write processed image data back to PPM for validation
 
-3. **General image operation framework**
+## Roadmap
+3. **Minimal image operation framework**
   Build a structure for image loading, operation selection, benchmarking, and result collection
 
 4. **General blur operation**
