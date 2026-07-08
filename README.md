@@ -8,7 +8,7 @@ This will be updated dynamically as steps get completed
 
 ## Roadmap
 1. **PPM to internal image representation**
-  Convert PPM images into image information (format, width, height, channels, max color value, and byte color values)
+  Convert PPM images into image information (format, width, height, channels, max color value, and color values)
      
 2. **Internal image representation to PPM**
   Write processed image data back to PPM for validation
