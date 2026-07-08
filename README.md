@@ -87,4 +87,5 @@ This will be updated dynamically as steps get completed
    Implement Multisample Anti-Aliasing in the renderer branch
 
 ### Bonus features
-Bloom and other image filters may be added as additional learning and performance-comparison options.
+* Bloom and other image filters may be added as additional learning and performance-comparison options.
+* Support for 16-bit formats may be added in the future
