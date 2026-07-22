@@ -113,16 +113,16 @@ private:
     );
 
     string image_format;
-	int width;
-	int height;
-	int channels;
-	// Max 255
-	int max_color_val;
-	// width * height
-	vector<uint8_t> r;
-	vector<uint8_t> g;
-	vector<uint8_t> b;
-	vector<uint8_t> a;
+    int width;
+    int height;
+    int channels;
+    // Max 255
+    int max_color_val;
+    // width * height
+    vector<uint8_t> r;
+    vector<uint8_t> g;
+    vector<uint8_t> b;
+    vector<uint8_t> a;
 };
 
 #endif
