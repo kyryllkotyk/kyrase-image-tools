@@ -1,4 +1,4 @@
-#include "../include/kyrase/writer.h"
+#include "kyrase/writer.h"
 
 void Writer::write_ppm_p6(
 	const string& file_path, 
