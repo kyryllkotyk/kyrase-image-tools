@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <limits>
 #include <string_view>
+#include <utility> // std::move
 
 using std::vector;
 using std::string; 
@@ -66,6 +67,33 @@ public:
     void set_g(const vector<uint8_t>& g);
     void set_b(const vector<uint8_t>& b);
     void set_a(const vector<uint8_t>& a);
+    void set_rgb(
+        const vector<uint8_t>& r,
+        const vector<uint8_t>& g,
+        const vector<uint8_t>& b
+    );
+    void set_rgba(
+        const vector<uint8_t>& r,
+        const vector<uint8_t>& g,
+        const vector<uint8_t>& b,
+        const vector<uint8_t>& a
+    );
+
+    void set_r(vector<uint8_t>&& new_r);
+    void set_g(vector<uint8_t>&& new_g);
+    void set_b(vector<uint8_t>&& new_b);
+    void set_a(vector<uint8_t>&& new_a);
+    void set_rgb(
+        vector<uint8_t>&& new_r,
+        vector<uint8_t>&& new_g,
+        vector<uint8_t>&& new_b
+    );
+    void set_rgba(
+        vector<uint8_t>&& new_r,
+        vector<uint8_t>&& new_g,
+        vector<uint8_t>&& new_b,
+        vector<uint8_t>&& new_a
+    );
 
 private:
     static void validateConstructorInput(
@@ -85,16 +113,16 @@ private:
     );
 
     string image_format;
-	int width;
-	int height;
-	int channels;
-	// Max 255
-	int max_color_val;
-	// width * height
-	vector<uint8_t> r;
-	vector<uint8_t> g;
-	vector<uint8_t> b;
-	vector<uint8_t> a;
+    int width;
+    int height;
+    int channels;
+    // Max 255
+    int max_color_val;
+    // width * height
+    vector<uint8_t> r;
+    vector<uint8_t> g;
+    vector<uint8_t> b;
+    vector<uint8_t> a;
 };
 
 #endif

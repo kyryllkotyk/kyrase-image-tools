@@ -1,4 +1,4 @@
-#include "../include/kyrase/reader.h"
+#include "kyrase/reader.h"
 
 Image Reader::read_ppm_p6(const string& file_name) {
 	std::filesystem::path path = file_name;

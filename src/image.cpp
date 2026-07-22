@@ -1,4 +1,4 @@
-#include "../include/kyrase/image.h"
+#include "kyrase/image.h"
 
 // Constructors
 
@@ -184,6 +184,66 @@ void Image::set_a(const vector<uint8_t>& a) {
     validateChannelSize(a, expected_size, "A");
 
     this->a = a;
+}
+
+void Image::set_rgb(
+    const vector<uint8_t>& r, 
+    const vector<uint8_t>& g,
+    const vector<uint8_t>& b
+) {
+    set_r(r);
+    set_g(g);
+    set_b(b);
+}
+
+void Image::set_rgba(
+    const vector<uint8_t>& r,
+    const vector<uint8_t>& g,
+    const vector<uint8_t>& b,
+    const vector<uint8_t>& a
+) {
+    set_r(r);
+    set_g(g);
+    set_b(b);
+    set_a(a);
+}
+
+void Image::set_r(vector<uint8_t>&& new_r) {
+    r = std::move(new_r);
+}
+
+void Image::set_g(vector<uint8_t>&& new_g) {
+    g = std::move(new_g);
+}
+
+void Image::set_b(vector<uint8_t>&& new_b) {
+    b = std::move(new_b);
+}
+
+void Image::set_a(vector<uint8_t>&& new_a) {
+    a = std::move(new_a);
+}
+
+void Image::set_rgb(
+    vector<uint8_t>&& r,
+    vector<uint8_t>&& g,
+    vector<uint8_t>&& b
+) {
+    set_r(std::move(r));
+    set_g(std::move(g));
+    set_b(std::move(b));
+}
+
+void Image::set_rgba(
+    vector<uint8_t>&& r,
+    vector<uint8_t>&& g,
+    vector<uint8_t>&& b,
+    vector<uint8_t>&& a
+) {
+    set_r(std::move(r));
+    set_g(std::move(g));
+    set_b(std::move(b));
+    set_b(std::move(a));
 }
 
 void Image::validateConstructorInput(

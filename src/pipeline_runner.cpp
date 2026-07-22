@@ -1,4 +1,4 @@
-#include "../include/kyrase/pipeline_runner.h"
+#include "kyrase/pipeline_runner.h"
 
 void PipelineRunner::run_operation(const OperationRequest& request) {	
 	Reader reader;
