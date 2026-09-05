@@ -11,6 +11,7 @@
 #include <cmath> // std::round
 
 #include "image.h"
+#include "utils.h"
 
 //#define MIN_WORK_PER_THREAD 
 
@@ -27,7 +28,7 @@ public:
 		GAUSSIAN, //NAIVE 
 		BINOMIAL, //NAIVE, TODO:: Passes?
 		MEDIAN, //NAIVE
-		LENS, //NAIVE
+		LENS, //TODO
 		BILATERAL, //TODO
 		KAWASE, //TODO
 		MOTION, //TODO
@@ -139,16 +140,6 @@ public:
 
 	};
 
-
-	enum class BlurrerEdgeMode {
-		REFLECT101,
-		REFLECT,
-		CLAMP,
-		WRAP,
-		CONSTANT,
-		IGNORE
-	};
-
 	enum OptimizationLevel {
 		SINGLE_NAIVE,
 		SINGLE_OPT,
@@ -157,32 +148,18 @@ public:
 		GPU
 	};
 
-	struct BlurrerConstantColor {
-		uint8_t r = 0;
-		uint8_t g = 0;
-		uint8_t b = 0;
 
-		BlurrerConstantColor(
-			uint8_t r = 0,
-			uint8_t g = 0,
-			uint8_t b = 0
-		)
-			: r(r),
-			g(g),
-			b(b) {
-		}
-	};
 
 	// General
 	struct BlurrerOptions {
-		BlurrerEdgeMode edge_mode;
-		BlurrerConstantColor edge_constant;
+		EdgeMode edge_mode;
+		ConstantColor edge_constant;
 		
 		uint32_t num_threads;
 
 		BlurrerOptions(
-			BlurrerEdgeMode edge_mode = BlurrerEdgeMode::REFLECT101,
-			BlurrerConstantColor edge_constant = {},
+			EdgeMode edge_mode = EdgeMode::REFLECT101,
+			ConstantColor edge_constant = {},
 			uint32_t threads = 1
 		);
 	};
@@ -207,10 +184,6 @@ public:
 			options(std::move(options)) {
 		}
 	};
-
-
-	// Naming standard:
-	// operation_modifier_implementationlevel_implementationtype
 
 	Image blur(
 		const BlurrerConfig& config,
@@ -344,7 +317,7 @@ private:
 		int rows, int img_cols, 
 		int radius_x, int radius_y, 
 		int kernel_size, 
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 
 		// Sum buffers
 		vector<uint64_t>& sums_r, vector<uint64_t>& sums_g, vector<uint64_t>& sums_b,
@@ -388,7 +361,7 @@ private:
 		vector<uint64_t>& sums_r, vector<uint64_t>& sums_g, vector<uint64_t>& sums_b,
 		int curr_row, 
 		int radius_x, int radius_y, 
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b, 
@@ -425,7 +398,7 @@ private:
 		int dx_begin, int dx_end,
 		int dy,
 		int height, int width,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b,
@@ -557,7 +530,7 @@ private:
 		uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b, 
 		int row, int col, 
 		int radius_x, int radius_y, 
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b, 
@@ -596,7 +569,7 @@ private:
 		uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
 		int row, int col,
 		int radius_x, int radius_y,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b,
@@ -676,122 +649,6 @@ private:
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	/**
-	 * @brief Checks whether the target (offset pixel) is out of bounds
-	 * 
-	 * @param caller_idx Caller's 1D index (caller = pixel from which to offset)
-	 * @param[in] dx Offset from the caller in x dimension
-	 * @param[in] dy Offset from the caller in y dimension
-	 * @param[in] height Height of the whole image
-	 * @param[in] width Width of the whole image
-	 * 
-	 * @return true if target pixel is out of bounds, false otherwise
-	 */
-	bool is_outside(
-		int caller_idx,
-		int dx, int dy,
-		int height, int width
-	);
-
-	/**
-	 * @brief Checks whether all pixels in the kernel's radius are in bounds
-	 * 
-	 * @param caller_idx Caller's 1D index (caller = pixel from which to offset)
-	 * @param[in] radius_x How many pixels to the left and right of the current
-	 * pixel to use in calculations
-	 * @param[in] radius_y How many pixels above or below the current pixel to use
-	 * in calculations
-	 * @param[in] height Height of the whole image
-	 * @param[in] width Width of the whole image
-	 * 
-	 * @return true if all kernel pixels are in bounds, false otherwise 
-	 */
-	bool is_kernel_all_inside(
-		int caller_idx, 
-		int radius_x, int radius_y, 
-		int height, int width
-	);
-
-	/**
-	 * @brief Finds the mapped in-bounds 1D index of the target position
-	 * based on the offsets in both dimensions from the caller pixel
-	 * 
-	 * @param[in] edge_mode How to handle image boundaries during the blur operation
-	 * @param[in] caller_idx Caller's 1D index (pixel offset is calculated from)
-	 * @param[in] dx Offset from the caller in x dimension
-	 * @param[in] dy Offset from the caller in y dimension
-	 * @param[in] width Width of the whole image
-	 * @param[in] height Height of the whole image
-	 * 
-	 * @return Mapped in-bounds 1D index of the target position
-	 */
-	size_t get_mapped_idx_naive(
-		BlurrerEdgeMode edge_mode, 
-		int caller_idx, 
-		int dx, int dy,
-		int width, int height
-	) const;
-
-	/**
-	 * @brief Calculates mapped index in the given dimension for reflection101 edge mode
-	 *
-	 * @param[in] caller_i Caller's index in the given dimension
-	 * @param[in] delta Offset from caller in the given dimension
-	 * @param[in] dimension_size Size of the image in the given dimension
-	 *
-	 * @return Mapped in-bounds index of the target
-	 */
-	int calculate_reflection101_per_d(
-		int caller_i,
-		int delta,
-		int dimension_size
-	) const;
-
-	/**
-	 * @brief Calculates mapped index in the given dimension for reflection edge mode
-	 *
-	 * @param[in] caller_i Caller's index in the given dimension
-	 * @param[in] delta Offset from caller in the given dimension
-	 * @param[in] dimension_size Size of the image in the given dimension
-	 *
-	 * @return Mapped in-bounds index of the target
-	 */
-	int calculate_reflection_per_d(
-		int caller_i,
-		int delta,
-		int dimension_size
-	) const;
-
-	/**
-	 * @brief Calculates mapped index in the given dimension for clamp edge mode
-	 *
-	 * @param[in] caller_i Caller's index in the given dimension
-	 * @param[in] delta Offset from caller in the given dimension
-	 * @param[in] dimension_size Size of the image in the given dimension
-	 *
-	 * @return Mapped in-bounds index of the target
-	 */
-	int calculate_clamp_per_d(
-		int caller_i, 
-		int delta, 
-		int dimension_size
-	) const;
-
-	/**
-	 * @brief Calculates mapped index in the given dimension for wrap edge mode
-	 *
-	 * @param[in] caller_i Caller's index in the given dimension
-	 * @param[in] delta Offset from caller in the given dimension
-	 * @param[in] dimension_size Size of the image in the given dimension
-	 *
-	 * @return Mapped in-bounds index of the target
-	 */
-	int calculate_wrap_per_d(
-		int caller_i, 
-		int delta, 
-		int dimension_size
-	) const;
-
-	/**
 	* @brief Calculates divisor for one output pixel
 	*
 	 * @param[in] row Row index of this pixel
@@ -839,7 +696,7 @@ private:
 	 * 
 	 */
 	void verify_blur_input(
-		BlurrerEdgeMode mode, 
+		EdgeMode mode, 
 		int radius_x, int radius_y, 
 		int passes, 
 		int width, int height
@@ -923,18 +780,6 @@ private:
 		uint8_t r_val, uint8_t g_val, uint8_t b_val
 	);
 
-	/**
-	 * @brief Converts 2D coordinates to a 1D index using image's width
-	 * @param y Pixel's y index (row)
-	 * @param x Pixel's x index (column)
-	 * @param width Full width of the image
-	 * @return Corresponding 1D index of the caller
-	 * 
-	 * @pre y and x must be >= 0 and within the image's dimensions.
-	 * width must match the image's width
-	 */
-	size_t convert_yx_to_idx(int y, int x, int width) const;
-
 
 
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -950,7 +795,7 @@ private:
 		int row, int col,
 		int radius_x, int radius_y,
 		const vector<double>& weights_x, const vector<double>& weights_y,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b,
@@ -1017,7 +862,7 @@ private:
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		uint8_t constant_edge_r = 0,
 		uint8_t constant_edge_g = 0,
 		uint8_t constant_edge_b = 0
@@ -1047,7 +892,7 @@ private:
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
 		const vector<uint8_t>& src_b,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		uint8_t constant_edge_r = 0,
 		uint8_t constant_edge_g = 0,
 		uint8_t constant_edge_b = 0
@@ -1069,7 +914,7 @@ private:
 		uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
 		int caller_idx,
 		int dx, int dy,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		int height, int width,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
@@ -1088,7 +933,7 @@ private:
 		uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
 		int caller_idx,
 		int dx, int dy,
-		BlurrerEdgeMode edge_mode,
+		EdgeMode edge_mode,
 		int height, int width,
 		const vector<uint8_t>& src_r,
 		const vector<uint8_t>& src_g,
@@ -1097,8 +942,14 @@ private:
 		uint8_t constant_edge_g,
 		uint8_t constant_edge_b
 	);
-};
 
+	void calculate_sigma_from_radius_gaussian_xy(
+		double& sigma_x, double& sigma_y,
+		int radius_x, int radius_y
+	);
+
+	double calculate_sigma_from_radius_gaussian_1d(int radius);
+};
 
 
 #endif
