@@ -1,8 +1,8 @@
 #include "kyrase/blurrer.h" 
 
 Blurrer::BlurrerOptions::BlurrerOptions(
-	BlurrerEdgeMode edge_mode,
-	BlurrerConstantColor edge_constant,
+	EdgeMode edge_mode,
+	ConstantColor edge_constant,
 	uint32_t threads
 ) : edge_mode(edge_mode),
 edge_constant(edge_constant),
@@ -59,7 +59,7 @@ void Blurrer::blur_modifiable(
 				config,
 				image
 			);
-			
+
 			break;
 		}
 
@@ -68,7 +68,7 @@ void Blurrer::blur_modifiable(
 				config,
 				image
 			);
-			
+
 			break;
 		}
 
@@ -81,7 +81,7 @@ void Blurrer::blur_modifiable(
 			break;
 		}
 
-		// TODO:: fill out after box_optimized_multi is implemented
+						 // TODO:: fill out after box_optimized_multi is implemented
 		case(MULTI_OPT): {
 			break;
 		}
@@ -94,7 +94,7 @@ void Blurrer::blur_modifiable(
 
 		break;
 	}
-		   
+
 	case(1): { // Gaussian blur
 		// Call the appropriate function based on optimization level requested
 		switch (optimization_level) {
@@ -136,7 +136,7 @@ void Blurrer::blur_modifiable(
 
 		break;
 	}
-	
+
 	case(3): { // Median blur
 		// Call the appropriate function based on optimization level requested
 		switch (optimization_level) {
@@ -236,7 +236,7 @@ void Blurrer::box_single_naive(
 		width,
 		height);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 
 	int pixel_count = width * height;
@@ -288,9 +288,10 @@ void Blurrer::box_single_naive(
 					true,
 					constant_edge_r,
 					constant_edge_g,
-					constant_edge_b);
+					constant_edge_b
+				);
 
-				if (edge_mode != BlurrerEdgeMode::IGNORE) {
+				if (edge_mode != EdgeMode::IGNORE) {
 					// Set output
 					set_output_pixel(
 						out_r[idx],
@@ -352,7 +353,7 @@ void Blurrer::box_partial_naive_single(
 		width,
 		height);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 
@@ -431,11 +432,11 @@ void Blurrer::box_partial_naive_single(
 							for (int dx = -radius_x; dx <= radius_x; dx++) {
 								if (is_outside(i, dx, dy, height, width)) {
 									// Specially handled edge modes
-									if (edge_mode == BlurrerEdgeMode::IGNORE) {
+									if (edge_mode == EdgeMode::IGNORE) {
 
 										continue;
 									}
-									else if (edge_mode == BlurrerEdgeMode::CONSTANT) {
+									else if (edge_mode == EdgeMode::CONSTANT) {
 										add_rgb_sums(
 											sum_r,
 											sum_g,
@@ -511,7 +512,7 @@ void Blurrer::box_partial_naive_single(
 					int divisor = kernel_size;
 					// IGNORE requires us to keep track of how many elements
 					// were actually added
-					if (edge_mode == BlurrerEdgeMode::IGNORE) {
+					if (edge_mode == EdgeMode::IGNORE) {
 						divisor = valid_count;
 					}
 
@@ -563,7 +564,7 @@ void Blurrer::box_single_optimized(
 		width,
 		height);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 	int kernel_size = 4 * radius_x * radius_y + 2 * radius_x + 2 * radius_y + 1;
@@ -574,7 +575,7 @@ void Blurrer::box_single_optimized(
 	vector<uint8_t> out_r(pixel_count), out_g(pixel_count), out_b(pixel_count);
 
 	for (int p = 0; p < passes; p++) {
-		
+
 		const vector<uint8_t>& src_r = image.get_r();
 		const vector<uint8_t>& src_g = image.get_g();
 		const vector<uint8_t>& src_b = image.get_b();
@@ -608,7 +609,7 @@ void Blurrer::box_single_optimized(
 
 			// Fill the output for this row
 			// Don't need to find divisor, as it's not IGNORE
-			if (edge_mode != BlurrerEdgeMode::IGNORE) {
+			if (edge_mode != EdgeMode::IGNORE) {
 				set_output_row(
 					out_r,
 					out_g,
@@ -673,7 +674,7 @@ void Blurrer::box_multi_naive(
 		width,
 		height);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 	int kernel_size = 4 * radius_x * radius_y + 2 * radius_x + 2 * radius_y + 1;
@@ -694,8 +695,8 @@ void Blurrer::box_multi_naive(
 		}
 
 		threads = h_thread_suggest;
-//		unsigned int threads_max = std::min(h_thread_suggest, static_cast<unsigned int>(width));
-//		uint64_t workload_estimate = pixel_count * passes;
+		//		unsigned int threads_max = std::min(h_thread_suggest, static_cast<unsigned int>(width));
+		//		uint64_t workload_estimate = pixel_count * passes;
 	}
 	// TODO:: Figure out better rules for this^^ by benchmarking
 
@@ -709,7 +710,7 @@ void Blurrer::box_multi_naive(
 	// Individual storages per-thread 
 	// For tracking rolling sums
 	vector<vector<uint64_t>> sums_r(threads), sums_g(threads), sums_b(threads);
-	
+
 
 	vector<jthread> thread_track;
 	thread_track.reserve(threads);
@@ -769,7 +770,7 @@ void Blurrer::box_multi_naive(
 						constant_edge_g,
 						constant_edge_b);
 				}
-			);
+					);
 		}
 
 		// Join threads
@@ -816,7 +817,7 @@ void Blurrer::gaussian_single_naive(
 		height
 	);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 	int kernel_size = 4 * radius_x * radius_y + 2 * radius_x + 2 * radius_y + 1;
@@ -893,7 +894,7 @@ void Blurrer::binomial_single_naive(
 		height
 	);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 	int kernel_size = 4 * radius_x * radius_y + 2 * radius_x + 2 * radius_y + 1;
@@ -969,7 +970,7 @@ void Blurrer::median_single_naive(
 		height
 	);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 	int kernel_size = 4 * radius_x * radius_y + 2 * radius_x + 2 * radius_y + 1;
@@ -1002,17 +1003,17 @@ void Blurrer::median_single_naive(
 				constant_edge_r, constant_edge_g, constant_edge_b
 			);
 
-			if (edge_mode == BlurrerEdgeMode::IGNORE) {
+			if (edge_mode == EdgeMode::IGNORE) {
 				end = get_divisor_ignore(
 					y, x, radius_x, radius_y, height, width
 				) - 1;
 			}
-			
+
 			find_kernel_median_rgb(
 				kernel_r, kernel_g, kernel_b,
 				0, end,
 				out_r[idx], out_g[idx], out_b[idx]
-			);			
+			);
 		}
 	}
 
@@ -1047,7 +1048,7 @@ void Blurrer::lens_single_naive(
 		height
 	);
 
-	BlurrerEdgeMode edge_mode = config.options.edge_mode;
+	EdgeMode edge_mode = config.options.edge_mode;
 
 	int pixel_count = width * height;
 	int kernel_size = 4 * radius * radius + 4 * radius + 1;
@@ -1085,9 +1086,9 @@ void Blurrer::lens_single_naive(
 
 
 void Blurrer::verify_blur_input(
-	BlurrerEdgeMode mode, 
-	int radius_x, int radius_y, 
-	int passes, 
+	EdgeMode mode,
+	int radius_x, int radius_y,
+	int passes,
 	int width, int height
 ) const {
 	if (radius_x < 0 || radius_y < 0) {
@@ -1109,19 +1110,6 @@ void Blurrer::verify_blur_input(
 	}
 }
 
-bool Blurrer::is_outside(int caller_idx, int dx, int dy, int height, int width) {
-	int caller_x = caller_idx % width;
-	int caller_y = caller_idx / width;
-
-	int target_x = caller_x + dx;
-	int target_y = caller_y + dy;
-
-	return target_x < 0
-		|| target_x >= width
-		|| target_y < 0
-		|| target_y >= height;
-}
-
 void Blurrer::add_rgb_sums(uint64_t& sum_r,
 	uint64_t& sum_g,
 	uint64_t& sum_b, uint8_t r_val, uint8_t g_val, uint8_t b_val) {
@@ -1136,7 +1124,7 @@ void Blurrer::add_rgb_sums_at_idx(
 	uint64_t& sum_b,
 	const vector<uint8_t>& r,
 	const vector<uint8_t>& g,
-	const vector<uint8_t>& b, 
+	const vector<uint8_t>& b,
 	size_t idx
 ) {
 	add_rgb_sums(
@@ -1149,214 +1137,10 @@ void Blurrer::add_rgb_sums_at_idx(
 	);
 }
 
-size_t Blurrer::get_mapped_idx_naive(
-	BlurrerEdgeMode edge_mode, 
-	int caller_idx, 
-	int dx, int dy, 
-	int width, int height
-) const {
-
-	int caller_x = caller_idx % width;
-	int caller_y = caller_idx / width;
-
-	int mapped_x = 0, mapped_y = 0;
-	// Figure out which edge type the user selected
-	switch (edge_mode) {
-	case(BlurrerEdgeMode::REFLECT101): {
-
-		mapped_x = calculate_reflection101_per_d(
-			caller_x,
-			dx,
-			width);
-
-		mapped_y = calculate_reflection101_per_d(
-			caller_y,
-			dy,
-			height);
-
-		break;
-	}
-
-	case(BlurrerEdgeMode::REFLECT): {
-		mapped_x = calculate_reflection_per_d(
-			caller_x,
-			dx,
-			width);
-
-		mapped_y = calculate_reflection_per_d(
-			caller_y,
-			dy,
-			height);
-
-		break;
-	}
-
-	case(BlurrerEdgeMode::CLAMP): {
-		mapped_x = calculate_clamp_per_d(
-			caller_x,
-			dx,
-			width);
-
-		mapped_y = calculate_clamp_per_d(
-			caller_y,
-			dy,
-			height);
-
-		break;
-	}
-
-	case(BlurrerEdgeMode::WRAP): {
-		mapped_x = calculate_wrap_per_d(
-			caller_x,
-			dx,
-			width);
-
-		mapped_y = calculate_wrap_per_d(
-			caller_y,
-			dy,
-			height);
-
-		break;
-	}
-
-	case(BlurrerEdgeMode::CONSTANT): {
-		throw std::logic_error(
-			"Blurrer: Constant edge mode must not utilize index mapping"
-		);
-	}
-
-	case(BlurrerEdgeMode::IGNORE): {
-		throw std::logic_error(
-			"Blurrer: Ignore edge mode must not utilize index mapping"
-		);
-	}
-
-	default:
-		throw std::invalid_argument(
-			"Blurrer: Unsupported edge mode"
-		);
-	}
-
-	return convert_yx_to_idx(mapped_y, mapped_x, width);
-
-}
-
-int Blurrer::calculate_reflection101_per_d(
-	int caller_i,
-	int delta,
-	int dimension_size
-) const {
-	// Reflect101:
-	// ti = caller i + di
-	int target_i = caller_i + delta;
-
-	// if ti < 0: mi = -ti
-	if (target_i < 0) {
-		return -target_i;
-	}
-	// if ti >= dimension size: mi = 2 * dimension size - 2 - ti
-	else if (target_i >= dimension_size) {
-		return 2 * dimension_size - 2 - target_i;
-	}
-	// if 0 <= ti < dimension size : mi = ti
-	else {
-		return target_i;
-	}
-}
-
-int Blurrer::calculate_reflection_per_d(
-	int caller_i,
-	int delta,
-	int dimension_size
-) const {
-	int target_i = caller_i + delta;
-
-	// Rely on the existing 101 and just adjust the inputs to avoid rewriting
-
-	if (target_i < 0) {
-		return calculate_reflection101_per_d(
-			caller_i,
-			delta + 1,
-			dimension_size);
-	}
-	else if (target_i >= dimension_size) {
-		return calculate_reflection101_per_d(
-			caller_i,
-			delta - 1,
-			dimension_size);
-	}
-	else {
-		return target_i;
-	}
-}
-
-int Blurrer::calculate_clamp_per_d(
-	int caller_i, 
-	int delta, 
-	int dimension_size
-) const {
-	int target_i = caller_i + delta;
-
-	if (target_i < 0) {
-		return 0;
-	}
-	else if (target_i >= dimension_size) {
-		return dimension_size - 1;
-	}
-	else {
-		return target_i;
-	}
-}
-
-int Blurrer::calculate_wrap_per_d(
-	int caller_i, 
-	int delta, 
-	int dimension_size
-) const {
-	int target_i = caller_i + delta;
-
-	if (target_i < 0) {
-		return dimension_size + target_i;
-	}
-	else if (target_i >= dimension_size) {
-		return target_i - dimension_size;
-	}
-	else {
-		return target_i;
-	}
-}
-
-size_t Blurrer::convert_yx_to_idx(
-	int y, int x, 
-	int width
-) const {
-	return static_cast<size_t>(y * width + x);
-}
-
-bool Blurrer::is_kernel_all_inside(
-	int caller_idx, 
-	int radius_x, int radius_y, 
-	int height, int width
-) {
-	int caller_y = caller_idx / width;
-	int caller_x = caller_idx % width;
-
-	if (
-		caller_x - radius_x < 0
-		|| caller_x + radius_x >= width
-		|| caller_y - radius_y < 0
-		|| caller_y + radius_y >= height
-		) {
-		return false;
-	}
-
-	return true;
-}
-
 void Blurrer::calculate_kernel_row_sum_in_bounds(
-	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b, 
-	int caller_idx, 
-	int dx_begin, int dx_end, int dy, 
+	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
+	int caller_idx,
+	int dx_begin, int dx_end, int dy,
 	int width,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
@@ -1369,7 +1153,7 @@ void Blurrer::calculate_kernel_row_sum_in_bounds(
 	for (int dx = dx_begin; dx <= dx_end; dx++) {
 		size_t idx = static_cast<size_t>(
 			caller_idx + width * dy + dx
-		);
+			);
 
 		add_rgb_sums_at_idx(
 			sum_r,
@@ -1384,14 +1168,14 @@ void Blurrer::calculate_kernel_row_sum_in_bounds(
 }
 
 void Blurrer::calculate_kernel_row_sum(
-	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b, 
-	int caller_idx, 
-	int dx_begin, int dx_end, int dy, 
-	int height, int width, 
-	BlurrerEdgeMode edge_mode,
+	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
+	int caller_idx,
+	int dx_begin, int dx_end, int dy,
+	int height, int width,
+	EdgeMode edge_mode,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
-	const vector<uint8_t>& src_b, 
+	const vector<uint8_t>& src_b,
 	uint8_t constant_edge_r, uint8_t constant_edge_g, uint8_t constant_edge_b
 ) {
 	sum_r = 0;
@@ -1407,10 +1191,10 @@ void Blurrer::calculate_kernel_row_sum(
 			height,
 			width)) {
 			// Specially handled edge modes
-			if (edge_mode == BlurrerEdgeMode::IGNORE) {
+			if (edge_mode == EdgeMode::IGNORE) {
 				continue;
 			}
-			else if (edge_mode == BlurrerEdgeMode::CONSTANT) {
+			else if (edge_mode == EdgeMode::CONSTANT) {
 				add_rgb_sums(
 					sum_r,
 					sum_g,
@@ -1458,15 +1242,15 @@ void Blurrer::calculate_kernel_row_sum(
 }
 
 void Blurrer::calculate_sum_pixel_using_above(
-	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b, 
-	int row, int col, 
-	int radius_x, int radius_y, 
-	BlurrerEdgeMode edge_mode,
+	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
+	int row, int col,
+	int radius_x, int radius_y,
+	EdgeMode edge_mode,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
-	const vector<uint8_t>& src_b, 
+	const vector<uint8_t>& src_b,
 	int height, int width,
-	bool row_col_already_verified, 
+	bool row_col_already_verified,
 	uint8_t constant_edge_r, uint8_t constant_edge_g, uint8_t constant_edge_b
 ) {
 
@@ -1552,15 +1336,15 @@ void Blurrer::calculate_sum_pixel_using_above(
 }
 
 void Blurrer::calculate_sum_pixel(
-	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b, 
+	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
 	int row, int col,
-	int radius_x, int radius_y, 
-	BlurrerEdgeMode edge_mode,
+	int radius_x, int radius_y,
+	EdgeMode edge_mode,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
 	const vector<uint8_t>& src_b,
 	int height, int width,
-	bool row_col_already_verified, 
+	bool row_col_already_verified,
 	uint8_t constant_edge_r, uint8_t constant_edge_g, uint8_t constant_edge_b
 ) {
 	// Ensure the pixel is inside the image
@@ -1646,12 +1430,12 @@ void Blurrer::calculate_sum_pixel(
 void Blurrer::calculate_sum_row(
 	vector<uint64_t>& sums_r, vector<uint64_t>& sums_g, vector<uint64_t>& sums_b,
 	int curr_row,
-	int radius_x, int radius_y, 
-	BlurrerEdgeMode edge_mode,
+	int radius_x, int radius_y,
+	EdgeMode edge_mode,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
 	const vector<uint8_t>& src_b,
-	int height, int width, 
+	int height, int width,
 	int start_col, int end_col,
 	uint8_t constant_edge_r, uint8_t constant_edge_g, uint8_t constant_edge_b
 ) {
@@ -1706,8 +1490,8 @@ void Blurrer::calculate_sum_row(
 }
 
 void Blurrer::set_output_pixel(
-	uint8_t& output_r, uint8_t& output_g, uint8_t& output_b, 
-	uint64_t sum_r, uint64_t sum_g, uint64_t sum_b, 
+	uint8_t& output_r, uint8_t& output_g, uint8_t& output_b,
+	uint64_t sum_r, uint64_t sum_g, uint64_t sum_b,
 	uint32_t divisor
 ) {
 	output_r = static_cast<uint8_t>((sum_r + divisor / 2) / divisor);
@@ -1722,16 +1506,16 @@ uint32_t Blurrer::get_divisor_ignore(
 ) {
 	uint32_t horizontal = (std::min(width - 1, col + radius_x)
 		- std::max(0, col - radius_x) + 1);
-	uint32_t vertical = (std::min(height - 1, row + radius_y) 
+	uint32_t vertical = (std::min(height - 1, row + radius_y)
 		- std::max(0, row - radius_y) + 1);
 	return horizontal * vertical;
 }
 
 void Blurrer::set_output_pixel_find_divisor(
-	uint8_t& output_r, uint8_t& output_g, uint8_t& output_b, 
-	uint64_t sum_r, uint64_t sum_g, uint64_t sum_b, 
+	uint8_t& output_r, uint8_t& output_g, uint8_t& output_b,
+	uint64_t sum_r, uint64_t sum_g, uint64_t sum_b,
 	int row, int col,
-	int radius_x, int radius_y, 
+	int radius_x, int radius_y,
 	int height, int width
 ) {
 	uint32_t divisor = get_divisor_ignore(
@@ -1757,8 +1541,8 @@ void Blurrer::set_output_row(
 
 	const vector<uint64_t>& sum_r,
 	const vector<uint64_t>& sum_g,
-	const vector<uint64_t>& sum_b, 
-	uint32_t divisor, 
+	const vector<uint64_t>& sum_b,
+	uint32_t divisor,
 	int row, int width,
 	int start_col, int end_col
 ) {
@@ -1784,10 +1568,10 @@ void Blurrer::set_output_row_find_divisor(
 
 	const vector<uint64_t>& sum_r,
 	const vector<uint64_t>& sum_g,
-	const vector<uint64_t>& sum_b, 
-	int row, 
-	int radius_x, int radius_y, 
-	int height, int width, 
+	const vector<uint64_t>& sum_b,
+	int row,
+	int radius_x, int radius_y,
+	int height, int width,
 	int start_col, int end_col
 ) {
 	int local_c;
@@ -1814,8 +1598,8 @@ void Blurrer::set_output_row_find_divisor(
 }
 
 void Blurrer::get_col_range_thread(
-	uint32_t& col_begin_buf, uint32_t& col_end_buf, 
-	uint32_t thread_num, uint32_t total_threads, 
+	uint32_t& col_begin_buf, uint32_t& col_end_buf,
+	uint32_t thread_num, uint32_t total_threads,
 	int total_cols
 ) {
 	// Base columns each thread gets is total cols / total threads 
@@ -1833,12 +1617,12 @@ void Blurrer::get_col_range_thread(
 void Blurrer::box_multi_per_thread(
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
-	const vector<uint8_t>& src_b, 
-	uint32_t start_col, uint32_t end_col, 
-	int rows, int img_cols, 
-	int radius_x, int radius_y, 
-	int kernel_size, 
-	BlurrerEdgeMode edge_mode,
+	const vector<uint8_t>& src_b,
+	uint32_t start_col, uint32_t end_col,
+	int rows, int img_cols,
+	int radius_x, int radius_y,
+	int kernel_size,
+	EdgeMode edge_mode,
 
 	// Sum buffers
 	vector<uint64_t>& sums_r,
@@ -1848,7 +1632,7 @@ void Blurrer::box_multi_per_thread(
 	// Output writing
 	vector<uint8_t>& out_r,
 	vector<uint8_t>& out_g,
-	vector<uint8_t>& out_b, 
+	vector<uint8_t>& out_b,
 	uint8_t constant_edge_r, uint8_t constant_edge_g, uint8_t constant_edge_b
 ) {
 
@@ -1875,7 +1659,7 @@ void Blurrer::box_multi_per_thread(
 
 		// Fill the output for this row
 		// Don't need to find divisor, as it's not IGNORE
-		if (edge_mode != BlurrerEdgeMode::IGNORE) {
+		if (edge_mode != EdgeMode::IGNORE) {
 			set_output_row(
 				out_r,
 				out_g,
@@ -1916,7 +1700,7 @@ void Blurrer::calculate_out_pixel_weighted(
 	int row, int col,
 	int radius_x, int radius_y,
 	const vector<double>& weights_x, const vector<double>& weights_y,
-	BlurrerEdgeMode edge_mode,
+	EdgeMode edge_mode,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
 	const vector<uint8_t>& src_b,
@@ -1998,10 +1782,10 @@ void Blurrer::calculate_out_pixel_weighted(
 
 				if (is_outside(curr_idx, dx, dy, height, width)) {
 					// Specially handled edge modes
-					if (edge_mode == BlurrerEdgeMode::IGNORE) {
+					if (edge_mode == EdgeMode::IGNORE) {
 						continue;
 					}
-					else if (edge_mode == BlurrerEdgeMode::CONSTANT) {
+					else if (edge_mode == EdgeMode::CONSTANT) {
 						r_to_add = constant_edge_r;
 						g_to_add = constant_edge_g;
 						b_to_add = constant_edge_b;
@@ -2049,7 +1833,7 @@ void Blurrer::calculate_out_pixel_weighted(
 			kernel_row_sum_b = 0;
 		}
 
-		if (edge_mode == BlurrerEdgeMode::IGNORE) {
+		if (edge_mode == EdgeMode::IGNORE) {
 			double participating_sum = get_sum_participating_weights_ignore(
 				curr_idx,
 				radius_x,
@@ -2059,14 +1843,14 @@ void Blurrer::calculate_out_pixel_weighted(
 				weights_x,
 				weights_y
 			);
-			
+
 			sum_r_accum /= participating_sum;
 			sum_g_accum /= participating_sum;
 			sum_b_accum /= participating_sum;
 		}
 	}
 
-	
+
 	// Convert back to output
 	out_r = static_cast<uint8_t>(std::round(sum_r_accum));
 	out_g = static_cast<uint8_t>(std::round(sum_g_accum));
@@ -2097,7 +1881,7 @@ double Blurrer::get_sum_participating_weights_ignore(
 void Blurrer::calculate_gaussian_weights_normalized(
 	// Storage
 	vector<double>& x_weights_store, vector<double>& y_weights_store,
-	double sigma_x,	double sigma_y,
+	double sigma_x, double sigma_y,
 	int radius_x, int radius_y
 ) {
 	// Get raw weights first
@@ -2119,7 +1903,7 @@ void Blurrer::normalize_weights(
 	size_t size_x, size_t size_y
 ) {
 	double x_weights_sum = std::accumulate(
-		x_weights_store.begin(), x_weights_store.end(), 
+		x_weights_store.begin(), x_weights_store.end(),
 		0.0
 	);
 
@@ -2132,20 +1916,20 @@ void Blurrer::normalize_weights(
 	if (x_weights_sum == 0 && y_weights_sum == 0) {
 		throw(std::runtime_error(
 			"Blurrer: Gaussian weight normalization tried dividing by 0")
-		);
+			);
 	}
 
 	std::transform(
-		x_weights_store.begin(), x_weights_store.end(), x_weights_store.begin(), 
+		x_weights_store.begin(), x_weights_store.end(), x_weights_store.begin(),
 		[x_weights_sum](double val) {
-		return val / x_weights_sum;
-	});
+			return val / x_weights_sum;
+		});
 
 	std::transform(
 		y_weights_store.begin(), y_weights_store.end(), y_weights_store.begin(),
 		[y_weights_sum](double val) {
 			return val / y_weights_sum;
-	});
+		});
 }
 
 void Blurrer::calculate_gaussian_weights_raw(
@@ -2213,11 +1997,11 @@ void Blurrer::calculate_binomial_normalized_weights_1d(
 	 1st & 5th -> di = 0
 	 2nd & 4th -> di = 1
 	 3rd & 3rd -> di = 2 = radius_i - 1
-	 
-	 (precalculated) 
+
+	 (precalculated)
 	 w0 = 2^(-2r) = 2^(-6) = 1/64
-	 w1 = w5 = w0 * (6 - 0) / 1 = 6w0 = 6/64 
-	 w2 = w4 = w1 * (6 - 1) / 2 = 2.5w1 = 15/64 
+	 w1 = w5 = w0 * (6 - 0) / 1 = 6w0 = 6/64
+	 w2 = w4 = w1 * (6 - 1) / 2 = 2.5w1 = 15/64
 	 w3 = w3 = w2 * (6 - 2) / 3 = 4w2/3 = 15/64 * 4/3 = 20/64
 
 	 [1/64, 6/64, 15/64, 20/64, 15/64, 6/64, 1/64]
@@ -2246,7 +2030,7 @@ void Blurrer::fill_kernel_temps(
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
 	const vector<uint8_t>& src_b,
-	BlurrerEdgeMode edge_mode,
+	EdgeMode edge_mode,
 	uint8_t constant_edge_r,
 	uint8_t constant_edge_g,
 	uint8_t constant_edge_b
@@ -2263,23 +2047,23 @@ void Blurrer::fill_kernel_temps(
 				kernel_pixels_r[k_i] = src_r[curr_src_idx];
 				kernel_pixels_g[k_i] = src_g[curr_src_idx];
 				kernel_pixels_b[k_i] = src_b[curr_src_idx];
-				
+
 				// Increment kernel idx - ready to fill next one
 				k_i++;
 			}
 		}
 	}
-	else {		
+	else {
 		// Go through all kernel pixels
 		for (int dy = -radius_y; dy <= radius_y; dy++) {
 			for (int dx = -radius_x; dx <= radius_x; dx++) {
 				curr_src_idx = caller_idx + dy * width + dx;
 
 				if (is_outside(caller_idx, dx, dy, height, width)) {
-					if (edge_mode == BlurrerEdgeMode::IGNORE) {
+					if (edge_mode == EdgeMode::IGNORE) {
 						continue;
 					}
-					if (edge_mode == BlurrerEdgeMode::CONSTANT) {
+					if (edge_mode == EdgeMode::CONSTANT) {
 						kernel_pixels_r[k_i] = constant_edge_r;
 						kernel_pixels_g[k_i] = constant_edge_g;
 						kernel_pixels_b[k_i] = constant_edge_b;
@@ -2303,7 +2087,7 @@ void Blurrer::fill_kernel_temps(
 
 					// Increment kernel idx - ready to fill next one
 					k_i++;
-					
+
 				}
 			}
 		}
@@ -2349,7 +2133,7 @@ void Blurrer::calculate_out_pixel_lens(
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
 	const vector<uint8_t>& src_b,
-	BlurrerEdgeMode edge_mode,
+	EdgeMode edge_mode,
 	uint8_t constant_edge_r,
 	uint8_t constant_edge_g,
 	uint8_t constant_edge_b
@@ -2357,7 +2141,7 @@ void Blurrer::calculate_out_pixel_lens(
 	// Accumulators
 	uint64_t sum_r = 0, sum_g = 0, sum_b = 0;
 	int rsq = radius * radius;
-	
+
 	// The kernel is inside. No need to check for out-of-bounds
 	if (is_kernel_all_inside(caller_idx, radius, radius, height, width)) {
 		for (int dy = 0; dy <= radius; dy++) {
@@ -2399,7 +2183,7 @@ void Blurrer::calculate_out_pixel_lens(
 			}
 		}
 
-		if (edge_mode == BlurrerEdgeMode::IGNORE) {
+		if (edge_mode == EdgeMode::IGNORE) {
 			total_weights = ignore_in_bounds;
 		}
 		set_output_pixel(
@@ -2407,7 +2191,7 @@ void Blurrer::calculate_out_pixel_lens(
 			sum_r, sum_g, sum_b,
 			total_weights
 		);
-		
+
 	}
 }
 
@@ -2448,7 +2232,7 @@ void Blurrer::add_from_src_all_dir(
 			src_r[curr_idx], src_g[curr_idx], src_b[curr_idx]
 		);
 	}
-	
+
 	// -+ -> equal to ++ if dy = 0. Must prevent duplication
 	if (dy != 0) {
 		curr_idx = caller_idx - dy * width + dx;
@@ -2472,7 +2256,7 @@ int Blurrer::add_from_src_all_dir_figure_oob(
 	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
 	int caller_idx,
 	int dx, int dy,
-	BlurrerEdgeMode edge_mode,
+	EdgeMode edge_mode,
 	int height, int width,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
@@ -2484,7 +2268,7 @@ int Blurrer::add_from_src_all_dir_figure_oob(
 	int ignore_ret = 0;
 
 	ignore_ret += add_from_src_figure_oob(
-		sum_r, sum_g, sum_b, 
+		sum_r, sum_g, sum_b,
 		caller_idx, dx, dy,
 		edge_mode,
 		height, width,
@@ -2528,7 +2312,7 @@ int Blurrer::add_from_src_all_dir_figure_oob(
 		);
 	}
 
-	if (edge_mode == BlurrerEdgeMode::IGNORE) {
+	if (edge_mode == EdgeMode::IGNORE) {
 		return ignore_ret;
 	}
 	else {
@@ -2549,7 +2333,7 @@ int Blurrer::add_from_src_figure_oob(
 	uint64_t& sum_r, uint64_t& sum_g, uint64_t& sum_b,
 	int caller_idx,
 	int dx, int dy,
-	BlurrerEdgeMode edge_mode,
+	EdgeMode edge_mode,
 	int height, int width,
 	const vector<uint8_t>& src_r,
 	const vector<uint8_t>& src_g,
@@ -2562,12 +2346,12 @@ int Blurrer::add_from_src_figure_oob(
 
 	if (is_outside(caller_idx, dx, dy, height, width)) {
 		// Ignore - don't add anything
-		if (edge_mode == BlurrerEdgeMode::IGNORE) {
+		if (edge_mode == EdgeMode::IGNORE) {
 			return 0;
 		}
 
 		// Constant - Add the set constants
-		if (edge_mode == BlurrerEdgeMode::CONSTANT) {
+		if (edge_mode == EdgeMode::CONSTANT) {
 			sum_r += constant_edge_r;
 			sum_g += constant_edge_g;
 			sum_b += constant_edge_b;
@@ -2588,6 +2372,19 @@ int Blurrer::add_from_src_figure_oob(
 		sum_r, sum_g, sum_b,
 		src_r[curr_idx], src_g[curr_idx], src_b[curr_idx]
 	);
-	
+
 	return 1;
+}
+
+void Blurrer::calculate_sigma_from_radius_gaussian_xy(
+	double& sigma_x, double& sigma_y,
+	int radius_x, int radius_y
+) {
+	sigma_x = calculate_sigma_from_radius_gaussian_1d(radius_x);
+	sigma_y = calculate_sigma_from_radius_gaussian_1d(radius_y);
+}
+
+
+double Blurrer::calculate_sigma_from_radius_gaussian_1d(int radius) {
+	return 0.3 * radius + 0.5;
 }
