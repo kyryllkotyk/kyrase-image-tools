@@ -75,7 +75,7 @@ Repeat steps 2-10 for each feature
 
 I will not be making many changes to the per-feature plan, but my approach on which features to implement and when will reflect the concepts I am practicing.
 
-- MASS and HPX added as backends for GPU implementation alongside MPI 
+- MASS and HPX added as backends for distributed implementation alongside MPI 
 - Distributed implementations will take priority over non-naive CPU implementations
 - GPU implementations will be deprioritized for now
 - Benchmarking and heavy testing will be deprioritized for now
