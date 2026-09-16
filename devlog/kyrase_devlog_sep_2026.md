@@ -41,21 +41,21 @@ As Kyrase is partially a learning project, I will be making some changes to refl
         	6. Number of timed runs
         	7. Number of warmup runs
         	8. Whether the benchmark used the modifying or non-modifying path
-        2. Different configurations
-        3. Modifying vs non-modifying
-        4. Different edge modes
-        5. Different pass counts (for subfeatures that have that)
-        6. Use warmup runs before timed runs
-        7. Reset input between runs
-        8. Time the full operation
-        9. Average the timed runs
-        10. Compare output hashes
-        12. Record benchmark times for each subfeature
-        13. Keep the benchmark harness in the repository
-        14. Compare optimization levels 
-        15. Compare implementation types (single vs multi vs GPU)
-        16. Record peak memory usage (optional)
-        17. Add configuration options for a more reusable harness 
+    2. Different configurations
+    3. Modifying vs non-modifying
+    4. Different edge modes
+    5. Different pass counts (for subfeatures that have that)
+    6. Use warmup runs before timed runs
+    7. Reset input between runs
+    8. Time the full operation
+    9. Average the timed runs
+    10. Compare output hashes
+    11. Record benchmark times for each subfeature
+    12. Keep the benchmark harness in the repository
+    13. Compare optimization levels 
+    14. Compare implementation types (single vs multi vs GPU)
+    15. Record peak memory usage (optional)
+    16. Add configuration options for a more reusable harness 
 
 6. Automate benchmarks with Google Benchmark
 
